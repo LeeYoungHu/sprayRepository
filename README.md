@@ -1,2 +1,2 @@
-# sprayRepository
-Spray Repository
+# 사전 개발과제
+사전 개발

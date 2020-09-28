@@ -8,6 +8,7 @@
 + Maven
 + My sql 8.0(Database)
 + Test : Junit5
++ 사용 tool : sts4, MySQL Workbench
 + 프로젝트 구동 방법 
 ```
  프로젝트 받은 후 table.sql에 있는 테이블 생성(JDK1.8 및 My sql 8.0은 이미 있다고 가정)

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.kakao.task.addReceiveInfoValidTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.134 s - in com.kakao.task.addReceiveInfoValidTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.042 s - in com.kakao.task.addReceiveInfoValidTest

@@ -1,0 +1,14 @@
+
+spring:
+  datasource:
+    driver-class-name: 'net.sf.log4jdbc.sql.jdbcapi.DriverSpy'
+    url : 'jdbc:log4jdbc:mysql://localhost:3306/kakaotask?serverTimezone=UTC&characterEncoding=UTF-8'
+    username : 'kakao'
+    password : 'kakao01!@'
+  messages:    encoding: 'UTF-8'
+    
+mybatis:  mapper-locations: 'classpath:static/mappers/*.xml'
+  configuration:    jdbc-type-for-null: 'varchar'
+    
+kakao:
+  permit-chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'  tokenLength : 3    

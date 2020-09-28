@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kakao.task.mapper.sprayMapper">
+
+	<select id="getRoomValidation" resultType="String">
+		SELECT
+			CASE WHEN COUNT(1) = 1 THEN 'Y'
+		    ELSE 'N' END AS ROOM_VALID
+		FROM KAKAO_RM_USER
+		WHERE ROOM_ID = #{roomId}
+		AND USER_ID = #{userId}
+	</select>
+
+	<select id="getAbleToken" resultType="String">
+	<![CDATA[
+		SELECT
+			CASE WHEN COUNT(1) = 0 THEN 'Y'
+		    ELSE 'N' END AS TOKEN_VALID
+		FROM KAKAO_DETAIL
+		WHERE ROOM_ID = #{roomId}
+		AND USER_ID = #{userId}
+		AND TOKEN = #{token}
+		AND YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+    ]]>
+	</select>
+	
+	<select id="getTokenValidation" resultType="String">
+	<![CDATA[	
+		SELECT
+			CASE WHEN COUNT(1) = 1 THEN 'Y'
+		    ELSE 'N' END AS TOKEN_VALID
+		FROM KAKAO_DETAIL A INNER JOIN ON KAKAO_RM_USER B
+		A.ROOM_ID = B.ROOM_ID
+		WHERE A.ROOM_ID = #{roomId}
+		AND B.USER_ID = #{userId}
+		AND A.TOKEN = #{token}
+		AND A.YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND A.YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+    ]]>
+	</select>
+	
+	<select id="getSprayUserValid" resultType="String">
+	<![CDATA[	
+		SELECT
+			CASE WHEN COUNT(1) = 1 THEN 'Y'
+		    ELSE 'N' END AS SPRAY_USER
+		FROM KAKAO_DETAIL
+		WHERE ROOM_ID = #{roomId}
+		AND USER_ID = #{userId}
+		AND TOKEN = #{token}
+		AND YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+    ]]>	
+	</select>
+	
+	<select id="getAlreadyReceiveInfo" resultType="String">
+	<![CDATA[	
+		SELECT
+			CASE WHEN COUNT(1) = 1 THEN 'Y'
+		    ELSE 'N' END AS SPRAY_USER
+		FROM KAKAO_REC_DETAIL
+		WHERE ROOM_ID = #{roomId}
+		AND TOKEN = #{token}
+		AND REC_USER_ID = #{userId}
+		AND YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+    ]]>			
+	</select>
+	
+	<select id="getAlreadyReceiveInfos" resultType="java.util.HashMap">
+	<![CDATA[	
+		SELECT
+			A.ROOM_ID
+			,A.USER_ID
+			,A.TOKEN
+			,A.YEARMONTH
+			,A.SEQ
+			,A.SPRAY_MONEY
+		FROM KAKAO_DETAIL A INNER JOIN KAKAO_SPRAY B
+        ON A.ROOM_ID = B.ROOM_ID
+        AND A.USER_ID = B.USER_ID
+        AND A.TOKEN = B.TOKEN
+        AND A.YEARMONTH = B.YEARMONTH        
+        LEFT OUTER JOIN KAKAO_REC_DETAIL C
+        ON A.ROOM_ID = C.ROOM_ID
+        AND A.USER_ID = C.USER_ID
+        AND A.TOKEN = C.TOKEN
+        AND A.YEARMONTH = C.YEARMONTH
+        AND A.SEQ = C.SEQ
+        AND B.ROOM_ID IS NULL
+        WHERE A.ROOM_ID = #{roomId}
+		AND A.TOKEN = #{token}
+		AND A.YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND A.YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+        AND TIMESTAMPDIFF(SECOND, B.CREATEDATE, now()) <= 600
+    ]]>					
+	</select>
+	
+	<select id="getSprayInfo" resultType="java.util.HashMap">
+	<![CDATA[	
+		WITH SPRAY_INFO AS (
+	    SELECT
+			IFNULL(SUM(SPRAY_MONEY), 0) AS SPRAY_MONEY
+		FROM KAKAO_DETAIL A INNER JOIN KAKAO_REC_DETAIL B
+	    ON A.ROOM_ID = B.ROOM_ID
+	    AND A.USER_ID = B.USER_ID
+	    AND A.TOKEN = B.TOKEN
+	    AND A.SEQ = B.SEQ
+	    WHERE A.ROOM_ID = #{roomId}
+	    AND A.USER_ID = #{userId}
+		AND A.TOKEN = #{token}
+		AND A.YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND A.YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+	    )
+		SELECT
+			DATE_FORMAT(CREATEDATE, '%Y%m%d %H:%i:%s') AS createdate
+	        ,TOTAL_MONEY as totalMoney
+	        ,(SELECT SPRAY_MONEY FROM SPRAY_INFO) as sprayMoney
+	    FROM KAKAO_SPRAY
+	    WHERE ROOM_ID = #{roomId}
+	    AND USER_ID = #{userId}
+		AND TOKEN = #{token}
+		AND YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)
+        AND CREATEDATE >= ADDDATE(now(), INTERVAL -7)
+	]]>
+	</select>
+	
+	<select id="getReceiveInfos" resultType="java.util.HashMap">
+	<![CDATA[	
+	    SELECT
+			A.SPRAY_MONEY AS sprayMoney
+			,B.REC_USER_ID AS recUserId
+		FROM KAKAO_DETAIL A INNER JOIN KAKAO_REC_DETAIL B
+	    ON A.ROOM_ID = B.ROOM_ID
+	    AND A.USER_ID = B.USER_ID
+	    AND A.TOKEN = B.TOKEN
+	    AND A.SEQ = B.SEQ
+	    WHERE A.ROOM_ID = #{roomId}
+	    AND A.USER_ID = #{userId}
+		AND A.TOKEN = #{token}
+		AND A.YEARMONTH >= CAST(#{preYearMonth} AS UNSIGNED)
+        AND A.YEARMONTH <= CAST(#{yearMonth} AS UNSIGNED)	
+	]]>        
+	</select>
+	
+	<insert id="insertSprayMaster">
+		INSERT INTO KAKAO_SPRAY
+			(
+				ROOM_ID
+				,USER_ID
+				,TOKEN
+				,YEARMONTH
+				,TOTAL_MONEY
+				,CREATEDATE
+			)
+		VALUES
+			(
+				#{roomId}
+				,#{userId}
+				,#{token}
+				,CAST(#{yearMonth} AS UNSIGNED)
+				,CAST(#{totalMoney} AS UNSIGNED)
+				,now()
+			)
+	</insert>	
+
+	<insert id="insertSprayDetail">
+		INSERT INTO KAKAO_DETAIL
+			(
+				ROOM_ID
+				,USER_ID
+				,TOKEN
+				,YEARMONTH
+				,SEQ
+				,SPRAY_MONEY
+			)
+		VALUES
+			(
+				#{roomId}
+				,#{userId}
+				,#{token}
+				,CAST(#{yearMonth} AS UNSIGNED)
+				,CAST(#{seq} AS UNSIGNED)
+				,CAST(#{sprayMoney} AS UNSIGNED)
+			)	
+	</insert>
+	
+	<insert id="insertSprayRecDetail">
+		INSERT INTO KAKAO_REC_DETAIL
+			(
+				ROOM_ID
+				,USER_ID
+				,TOKEN
+				,YEARMONTH
+				,SEQ
+				,REC_USER_ID				
+			)
+		VALUES
+			(
+				#{ROOM_ID}
+				,#{USER_ID}
+				,#{TOKEN}
+				,#{YEARMONTH}
+				,#{SEQ}
+				,#{REC_USER_ID}
+			)
+	</insert>
+
+</mapper>
